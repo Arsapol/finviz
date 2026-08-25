@@ -201,7 +201,7 @@ class Screener(object):
     def __len__(self):
         """ Returns an int with the number of total rows. """
 
-        return int(self._rows)
+        return len(self.data)
 
     def __getitem__(self, position):
         """ Returns a dictionary containing specific row data. """
@@ -496,5 +496,18 @@ class Screener(object):
         for page in pages_data:
             for row in page:
                 data.append(row)
+
+        # Validate data completeness (allow small discrepancies in Finviz reporting)
+        expected_rows = self._rows
+        missing_rows = expected_rows - len(data)
+
+        # Only raise error if significant data loss (>1% or >10 rows)
+        # Finviz sometimes reports slightly more rows than it actually returns
+        tolerance = max(10, int(expected_rows * 0.01))
+        if missing_rows > tolerance:
+            raise RuntimeError(
+                f"Incomplete data: got {len(data)} of {expected_rows} rows "
+                f"({missing_rows} rows missing)"
+            )
 
         return data

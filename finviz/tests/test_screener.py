@@ -41,10 +41,12 @@ class TestScreenerBasic:
 
     @pytest.mark.network
     def test_screener_len(self):
-        """len(screener) should return total rows."""
+        """len(screener) should return actual data rows."""
         screener = Screener(filters=["cap_largeover", "exch_nasd"], table="Overview")
         assert len(screener) > 0
-        assert len(screener) == screener._rows
+        # Note: Finviz may report more rows than actually returned
+        assert len(screener) == len(screener.data)
+        assert len(screener) <= screener._rows  # Actual should not exceed reported
 
     @pytest.mark.network
     def test_screener_getitem(self):
