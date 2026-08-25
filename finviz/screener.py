@@ -341,6 +341,24 @@ class Screener(object):
 
         return export_to_csv(self.headers, self.data, f"{filename}.csv")
 
+    def to_parquet(self, filename: str):
+        """Exports the generated table into a Parquet file.
+
+        :param filename: Parquet file path
+        :type filename: str
+        :raises ImportError: if pyarrow is not installed
+        """
+
+        try:
+            import pyarrow  # noqa: F401
+        except ImportError:
+            raise ImportError(
+                "to_parquet requires pyarrow. Install it with: pip install pyarrow"
+            )
+
+        df = self.to_dataframe()
+        df.to_parquet(filename, engine="pyarrow", index=False)
+
     def to_dataframe(self):
         """Exports the generated table to a pandas DataFrame.
 

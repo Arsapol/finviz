@@ -256,6 +256,30 @@ class TestScreenerMethods:
         assert "tickers" in repr_str
         assert "AAPL" in repr_str
 
+    @pytest.mark.network
+    def test_to_parquet(self):
+        """to_parquet should export data to Parquet file."""
+        import os
+
+        screener = Screener(table="Overview", rows=5)
+        parquet_file = "/tmp/test_screener.parquet"
+
+        try:
+            # Export to parquet
+            screener.to_parquet(parquet_file)
+
+            # Read back and verify
+            df = screener.to_dataframe()
+            assert len(df) == 5
+            assert list(df.columns) == screener.headers
+
+            # Verify file was created
+            assert os.path.exists(parquet_file)
+        finally:
+            # Clean up
+            if os.path.exists(parquet_file):
+                os.remove(parquet_file)
+
 
 class TestScreenerClassMethods:
     """Tests for Screener class methods."""
