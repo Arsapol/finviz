@@ -10,6 +10,8 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
     """ Private function used to return table data inside a list of dictionaries. """
     if isinstance(page_html, str):
         page_parsed = html.fromstring(page_html)
+    elif hasattr(page_html, "cssselect"):  # already-parsed lxml tree (async css_select path)
+        page_parsed = page_html
     else:
         page_parsed = html.fromstring(page_html.text)
     # When we call this method from Portfolio we don't fill the rows argument.
@@ -20,10 +22,11 @@ def get_table(page_html: requests.Response, headers, rows=None, **kwargs):
 
     data_sets = []
     # Select the HTML of the rows and append each column text to a list
-    all_rows = [
-        column.xpath("td//text()")
-        for column in page_parsed.cssselect('tr[valign="top"]')
-    ]
+    # Extract one joined value per <td> to handle split text nodes
+    all_rows = []
+    for row in page_parsed.cssselect('tr[valign="top"]'):
+        row_data = ["".join(td.itertext()).strip() for td in row.cssselect("td")]
+        all_rows.append(row_data)
 
     # If rows is different from -2, this function is called from Screener
     if rows != -2:
